@@ -4,17 +4,6 @@
 
 #include "base.h"
 
-void fillLocation(PacketGroup &packetGroup, ifstream &recordFile) {
-    packetGroup.updateTimeStamp();
-    string line;
-    while (getline(recordFile, line)) {
-        Record record(line);
-        if (record.timeStamp >= packetGroup.getTimeStampAvg()) {
-            packetGroup.setLocation(record.location);
-            break;
-        }
-    }
-}
 
 /**
  * Return ONLY abnormal packets!
@@ -22,43 +11,60 @@ void fillLocation(PacketGroup &packetGroup, ifstream &recordFile) {
  * @param RECORD_FILE_NAME
  * @param ret abnormal packets
  */
-void readInput(const string &RECEIVED_FILE_NAME, const string &RECORD_FILE_NAME, vector<PacketGroup> &ret) {
+void readInput(const string &RECEIVED_FILE_NAME,
+               const string &RECORD_FILE_NAME,
+               vector<double> &ret,
+               Globals *pGlobal) {
     ifstream receivedFile(RECEIVED_FILE_NAME);
     ifstream recordFile(RECORD_FILE_NAME);
+    
+    ret.assign(40, 0);
+    vector<int> total, error;
+    total.assign(40, 0);
+    error.assign(40, 0);
+    
     if (!receivedFile.is_open() || !recordFile.is_open()) {
         cout << "file open failed!" << endl;
         return;
     }
     
+    vector<PacketGroup> temp;
+    int count = 0;
+    
     string line;
     while (getline(receivedFile, line)) {
         Packet packet(line);
-        if (ret.empty()) {
-            ret.emplace_back(PacketGroup(packet.packetID));
-            ret.back().addPacket(packet);
-        } else if (ret.back().getPacketID() != packet.packetID) {
-            // pop out normal packet group.
-            if (!ret.back().isAbnormal()) { ret.pop_back(); }
-            else { fillLocation(ret.back(), recordFile); }
-            ret.emplace_back(PacketGroup(packet.packetID));
-            ret.back().addPacket(packet);
+        if (temp.empty()) {
+            temp.emplace_back(packet.packetID, pGlobal);
+            temp.back().addPacket(packet);
+        } else if (temp.back().getPacketID() == packet.packetID) {
+            temp.back().addPacket(packet);
         } else {
-            ret.back().addPacket(packet);
+            temp.back().updateRssiAvg();
+            total[(int) temp.back().getRssiAvg() + pGlobal->rssiOffset]++;
+            if (temp.back().isAbnormal()) {
+                error[(int) temp.back().getRssiAvg() + pGlobal->rssiOffset]++;
+            }
+            count++;
+            temp.pop_back();
+            temp.emplace_back(packet.packetID, pGlobal);
+            temp.back().addPacket(packet);
         }
     }
     
-    if (!ret.back().isAbnormal()) { ret.pop_back(); }
-    else { fillLocation(ret.back(), recordFile); }
+    for (int i = 0; i < 40; i++) {
+        if (total[i] == 0) { continue; }
+        ret[i] = (double) error[i] / (double) total[i];
+    }
     
     receivedFile.close();
     recordFile.close();
 }
 
-void printOutput(const string &OUTPUT_FILE_NAME, const vector<PacketGroup> &packetGroups) {
+void printOutput(const string &OUTPUT_FILE_NAME, const vector<double> &errorRate, Globals *pGlobal) {
     ofstream outputFile(OUTPUT_FILE_NAME);
-    for (const PacketGroup &packetGroup : packetGroups) {
-        outputFile << packetGroup.getLocation().first << " " << packetGroup.getLocation().second << " "
-                   << packetGroup.getPacketID() << " " << packetGroup.getTimeStampAvg() << endl;
+    for (int i = 0; i < errorRate.size(); i++) {
+        outputFile << i - pGlobal->rssiOffset << "," << errorRate[i] << endl;
     }
     outputFile.close();
 }

@@ -16,7 +16,10 @@ Packet::Packet(const string &s) {
 
 int PacketGroup::getPacketID() const { return packetID; }
 
-PacketGroup::PacketGroup(int packetID) { this->packetID = packetID; }
+PacketGroup::PacketGroup(int packetID, Globals *globals) {
+    this->packetID = packetID;
+    this->globals = globals;
+}
 
 unsigned long long PacketGroup::getTimeStampAvg() const { return timeStampAvg; }
 
@@ -46,3 +49,11 @@ void PacketGroup::updateTimeStamp() {
     }
     timeStampAvg = temp / packets.size();
 }
+
+void PacketGroup::updateRssiAvg() {
+    double temp = 0;
+    for (Packet &packet : packets) { temp += (double) packet.rssi; }
+    rssiAvg = temp / (double) packets.size();
+}
+
+double PacketGroup::getRssiAvg() {return rssiAvg; }
