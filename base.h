@@ -12,8 +12,16 @@
 #include <fstream>
 #include <algorithm>
 #include <memory>
+#include <iomanip>
 
 using namespace std;
+
+#define CAMPUS_LAT_MIN 42.082444
+#define CAMPUS_LAT_MAX 42.092444
+#define CAMPUS_LNG_MIN (-75.980282)
+#define CAMPUS_LNG_MAX (-75.962282)
+#define DIVIDE_LAT_TO 20
+#define DIVIDE_LNG_TO 18
 
 struct Globals {
     const vector<double> sfSendTime = {0.103, 0.17, 0.296, 0.52, 1.013, 2.002};
@@ -69,10 +77,10 @@ public:
 
 void readInput(const string &RECEIVED_FILE_NAME,
                const string &RECORD_FILE_NAME,
-               vector<double> &ret,
+               vector<vector<double>> &ret,
                Globals *pGlobal);
 
-void printOutput(const string &OUTPUT_FILE_NAME, const vector<double> &errorRate, Globals *pGlobal);
+void printOutput(const string &OUTPUT_FILE_NAME, const vector<vector<double>> &errorRate, Globals *pGlobal);
 
 void splitByChar(const string &s, vector<string> &ret, const char splitChar);
 

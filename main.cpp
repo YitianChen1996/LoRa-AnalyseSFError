@@ -10,9 +10,9 @@ int main(int argc, char *argv[]) {
     const string RECORD_FILE_NAME = string(argv[2]);
     const string OUTPUT_FILE_NAME = string(argv[3]);
     std::cout << "Hello, World!" << std::endl;
-    vector<double> errorRate;
-    readInput(RECEIVED_FILE_NAME, RECORD_FILE_NAME, errorRate, pGlobal);
-    printOutput(OUTPUT_FILE_NAME, errorRate, pGlobal);
+    vector<vector<double>> grid;
+    readInput(RECEIVED_FILE_NAME, RECORD_FILE_NAME, grid, pGlobal);
+    printOutput(OUTPUT_FILE_NAME, grid, pGlobal);
     
     delete pGlobal;
     return 0;
