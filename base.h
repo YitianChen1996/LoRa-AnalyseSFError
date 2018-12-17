@@ -9,6 +9,7 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <fstream>
 #include <algorithm>
 #include <memory>
@@ -59,12 +60,16 @@ public:
     void addPacket(const Packet &newPacket);
     
     bool isAbnormal();
+
+    bool isNormal();
     
     void updateTimeStamp();
     
     void updateRssiAvg();
     
     double getRssiAvg();
+
+    double getSnrAvg();
     
     int getPacketID() const;
     
@@ -81,6 +86,8 @@ void readInput(const string &RECEIVED_FILE_NAME,
                Globals *pGlobal);
 
 void printOutput(const string &OUTPUT_FILE_NAME, const vector<vector<double>> &errorRate, Globals *pGlobal);
+
+void printOutput_jsLoadable(const string &OUTPUT_FILE_NAME, const vector<vector<double>> &errorRate, Globals *pGlobal);
 
 void splitByChar(const string &s, vector<string> &ret, const char splitChar);
 

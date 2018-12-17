@@ -30,15 +30,18 @@ void PacketGroup::setLocation(const pair<double, double> &loc) { this->location 
 pair<double, double> PacketGroup::getLocation() const { return location; }
 
 bool PacketGroup::isAbnormal() {
-    sort(packets.begin(), packets.end(), [](const Packet &p1, const Packet &p2) -> bool {
-        return p1.sf > p2.sf;
-    });
-    int p = 0;
-    for (int offset = 6; offset >= 1; offset--) {
-        if (p >= packets.size()) { return false; }
-        if (packets[p].sf != (1 << offset)) { return true; }
-        p++;
-    }
+    const int higher = 10, lower = 9;
+    unordered_set<int> temp;
+    for (const Packet &packet : packets) { temp.insert(packet.sf); }
+    if (temp.find(8) != temp.end() && temp.find(16) == temp.end()) { return true; }
+    return false;
+}
+
+bool PacketGroup::isNormal() {
+    const int higher = 10, lower = 9;
+    unordered_set<int> temp;
+    for (const Packet &packet : packets) { temp.insert(packet.sf); }
+    if (temp.find(8) != temp.end()) { return true; }
     return false;
 }
 
@@ -54,6 +57,12 @@ void PacketGroup::updateRssiAvg() {
     double temp = 0;
     for (Packet &packet : packets) { temp += (double) packet.rssi; }
     rssiAvg = temp / (double) packets.size();
+}
+
+double PacketGroup::getSnrAvg() {
+    double temp = 0;
+    for (Packet &packet : packets) { temp += (double) packet.snr; }
+    return temp / (double) packets.size();
 }
 
 double PacketGroup::getRssiAvg() {return rssiAvg; }

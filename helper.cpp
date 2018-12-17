@@ -70,7 +70,7 @@ void readInput(const string &RECEIVED_FILE_NAME,
             int col = getIndexLongitude(temp.back().getLocation().second);
             if (row != -1 && col != -1) {
                 if (temp.back().isAbnormal()) { error[row][col]++; }
-                total[row][col]++;
+                if (temp.back().isNormal()) { total[row][col]++; }
             }
             temp.pop_back();
             temp.emplace_back(packet.packetID, pGlobal);
@@ -78,10 +78,21 @@ void readInput(const string &RECEIVED_FILE_NAME,
         }
     }
     
+    int totalCnt = 0, errorCnt = 0;
     for (int i = 0; i < DIVIDE_LAT_TO; i++) {
         for (int j = 0; j < DIVIDE_LNG_TO; j++) {
-            ret[i][j] = (total[i][j] == 0) ? -1 : (double) error[i][j] / (double) total[i][j];
+            totalCnt += total[i][j];
+            errorCnt += error[i][j];
+            ret[i][j] = (total[i][j] == 0) ? 0 : (double) error[i][j] / (double) total[i][j];
         }
+    }
+    cout << (double) errorCnt / (double) totalCnt << endl;
+
+    for (int i = 0; i < DIVIDE_LAT_TO; i++) {
+        for (int j = 0; j < DIVIDE_LNG_TO; j++) {
+            cout << setw(7) << setprecision(3) << total[i][j] << " ";
+        }
+        cout << endl;
     }
     
     receivedFile.close();
@@ -95,6 +106,18 @@ void printOutput(const string &OUTPUT_FILE_NAME, const vector<vector<double>> &e
             outputFile << setw(7) << setprecision(3) << errorRate[i][j] << " ";
         }
         outputFile << endl;
+    }
+    outputFile.close();
+}
+
+void printOutput_jsLoadable(const string &OUTPUT_FILE_NAME, const vector<vector<double>> &errorRate, Globals *pGlobal) {
+    ofstream outputFile(OUTPUT_FILE_NAME);
+    for (int i = 0; i < errorRate.size(); i++) {
+        outputFile << "[";
+        for (int j = 0; j < errorRate[i].size(); j++) {
+            outputFile << errorRate[i][j] << ",";
+        }
+        outputFile << "]," << endl;
     }
     outputFile.close();
 }
